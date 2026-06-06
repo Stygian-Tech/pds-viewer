@@ -10,14 +10,14 @@ interface RecordViewerProps {
 export function RecordViewer({ record }: RecordViewerProps) {
   if (!record) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+      <div className="py-8 text-center text-sm text-zinc-500">
         Select a record to inspect its JSON value.
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-hidden">
+    <div className="min-w-0 space-y-4">
       <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
         <div>
           <p className="text-[11px] uppercase tracking-wide text-zinc-500">URI</p>
@@ -29,7 +29,7 @@ export function RecordViewer({ record }: RecordViewerProps) {
         </div>
       </div>
 
-      <pre className="min-h-0 flex-1 overflow-auto rounded-xl border border-zinc-800 bg-black/40 p-4 font-mono text-xs leading-6 text-emerald-100">
+      <pre className="w-full max-w-full overflow-x-auto whitespace-pre rounded-xl border border-zinc-800 bg-black/40 p-4 font-mono text-xs leading-6 text-emerald-100">
         {stringifyValue(record.value)}
       </pre>
     </div>

@@ -14,7 +14,8 @@ link
 
 ## Stack
 
-- Next.js App Router
+- Next.js App Router with Turbopack
+- Bun
 - `@atproto/oauth-client-browser`
 - `@atproto/api`
 
@@ -22,12 +23,14 @@ All OAuth session handling and repo reads happen in the browser.
 
 ## Local development
 
+Requires [Bun](https://bun.sh).
+
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
-Open the app at `http://127.0.0.1:3000` (loopback OAuth works best on `127.0.0.1`, not `localhost`).
+The dev server binds to `http://127.0.0.1:3000` because ATProto loopback OAuth requires the IP address, not `localhost`.
 
 1. Enter your ATProto handle.
 2. Complete the OAuth redirect.
@@ -54,10 +57,10 @@ https://your-domain.example/oauth-client-metadata.json
 ## Scripts
 
 ```bash
-npm run dev
-npm run lint
-npm run build
-npm run start
+bun run dev      # next dev --turbopack
+bun run lint
+bun run build    # next build --turbopack
+bun run start
 ```
 
 ## Limitations

@@ -28,7 +28,7 @@ export function RecordList({
 }: RecordListProps) {
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+      <div className="py-8 text-center text-sm text-zinc-500">
         Loading records…
       </div>
     );
@@ -44,15 +44,15 @@ export function RecordList({
 
   if (records.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-zinc-500">
-        No records in <span className="ml-1 font-mono text-zinc-300">{collection}</span>
+      <div className="py-8 text-center text-sm text-zinc-500">
+        No records in <span className="font-mono text-zinc-300">{collection}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <div className="space-y-1 overflow-auto">
+    <div className="space-y-3">
+      <div className="space-y-1">
         {records.map((record) => {
           const selected = record.uri === selectedUri;
           return (
@@ -82,7 +82,7 @@ export function RecordList({
           type="button"
           onClick={onLoadMore}
           disabled={loadingMore}
-          className="rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+          className="w-full rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
         >
           {loadingMore ? "Loading more…" : "Load more records"}
         </button>

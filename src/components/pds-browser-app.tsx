@@ -20,6 +20,11 @@ import { FolderTree } from "@/components/folder-tree";
 import { RecordList } from "@/components/record-list";
 import { RecordViewer } from "@/components/record-viewer";
 import { SignInPanel } from "@/components/sign-in-panel";
+import {
+  BrowserColumn,
+  ResizablePanels,
+  StackedPanels,
+} from "@/components/resizable-panels";
 
 type AppStatus = "booting" | "signed-out" | "signed-in";
 
@@ -87,7 +92,7 @@ export function PdsBrowserApp() {
         setSession(result.session);
         setAgent(nextAgent);
         setStatus("signed-in");
-        await loadRepo(nextAgent, result.session.did);
+        void loadRepo(nextAgent, result.session.did);
       } catch (error) {
         if (cancelled) {
           return;
@@ -232,8 +237,66 @@ export function PdsBrowserApp() {
     );
   }
 
+  const collectionsPanel = (
+    <BrowserColumn
+      title="Collections"
+      badge={repo?.collections.length ?? 0}
+    >
+      {folderTree ? (
+        <FolderTree
+          root={folderTree}
+          selectedCollection={selectedCollection}
+          expandedPaths={expandedPaths}
+          onToggle={handleTogglePath}
+          onSelectCollection={handleSelectCollection}
+        />
+      ) : (
+        <p className="text-sm text-zinc-500">No collections loaded.</p>
+      )}
+    </BrowserColumn>
+  );
+
+  const recordsPanel = (
+    <BrowserColumn
+      title="Records"
+      subtitle={selectedCollection ?? "Select a collection"}
+    >
+      {selectedCollection ? (
+        <RecordList
+          collection={selectedCollection}
+          records={records}
+          selectedUri={selectedRecord?.uri ?? null}
+          loading={recordsLoading}
+          loadingMore={recordsLoadingMore}
+          hasMore={Boolean(recordsCursor)}
+          error={recordsError}
+          onSelect={setSelectedRecord}
+          onLoadMore={() => {
+            if (selectedCollection && recordsCursor) {
+              void loadCollectionRecords(
+                selectedCollection,
+                recordsCursor,
+                true,
+              );
+            }
+          }}
+        />
+      ) : (
+        <p className="py-8 text-center text-sm text-zinc-500">
+          Pick a collection from the tree.
+        </p>
+      )}
+    </BrowserColumn>
+  );
+
+  const viewerPanel = (
+    <BrowserColumn title="Record JSON">
+      <RecordViewer record={selectedRecord} />
+    </BrowserColumn>
+  );
+
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100">
       <header className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-emerald-400">
@@ -274,68 +337,16 @@ export function PdsBrowserApp() {
         </div>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_minmax(0,1.2fr)]">
-        <aside className="border-b border-zinc-800 p-4 lg:border-b-0 lg:border-r">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-zinc-300">Collections</h2>
-            <span className="text-xs text-zinc-500">
-              {repo?.collections.length ?? 0}
-            </span>
-          </div>
-          {folderTree ? (
-            <FolderTree
-              root={folderTree}
-              selectedCollection={selectedCollection}
-              expandedPaths={expandedPaths}
-              onToggle={handleTogglePath}
-              onSelectCollection={handleSelectCollection}
-            />
-          ) : (
-            <p className="text-sm text-zinc-500">No collections loaded.</p>
-          )}
-        </aside>
-
-        <section className="border-b border-zinc-800 p-4 lg:border-b-0 lg:border-r">
-          <div className="mb-3">
-            <h2 className="text-sm font-medium text-zinc-300">Records</h2>
-            <p className="font-mono text-xs text-zinc-500">
-              {selectedCollection ?? "Select a collection"}
-            </p>
-          </div>
-          {selectedCollection ? (
-            <RecordList
-              collection={selectedCollection}
-              records={records}
-              selectedUri={selectedRecord?.uri ?? null}
-              loading={recordsLoading}
-              loadingMore={recordsLoadingMore}
-              hasMore={Boolean(recordsCursor)}
-              error={recordsError}
-              onSelect={setSelectedRecord}
-              onLoadMore={() => {
-                if (selectedCollection && recordsCursor) {
-                  void loadCollectionRecords(
-                    selectedCollection,
-                    recordsCursor,
-                    true,
-                  );
-                }
-              }}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-zinc-500">
-              Pick a collection from the tree.
-            </div>
-          )}
-        </section>
-
-        <section className="p-4">
-          <div className="mb-3">
-            <h2 className="text-sm font-medium text-zinc-300">Record JSON</h2>
-          </div>
-          <RecordViewer record={selectedRecord} />
-        </section>
-      </div>
+      <ResizablePanels
+        left={collectionsPanel}
+        middle={recordsPanel}
+        right={viewerPanel}
+      />
+      <StackedPanels
+        left={collectionsPanel}
+        middle={recordsPanel}
+        right={viewerPanel}
+      />
     </div>
   );
 }

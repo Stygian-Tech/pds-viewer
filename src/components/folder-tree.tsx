@@ -106,7 +106,7 @@ export function FolderTree({
   onSelectCollection,
 }: FolderTreeProps) {
   return (
-    <div className="space-y-1 overflow-auto">
+    <div className="space-y-1">
       <TreeNode
         node={root}
         depth={0}
