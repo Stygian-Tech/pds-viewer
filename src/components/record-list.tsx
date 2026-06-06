@@ -1,5 +1,6 @@
 "use client";
 
+import { formatBytes } from "@/lib/format-bytes";
 import { recordLabel } from "@/lib/json";
 import type { RepoRecord } from "@/lib/atproto/repo";
 
@@ -7,6 +8,7 @@ interface RecordListProps {
   collection: string;
   records: RepoRecord[];
   selectedUri: string | null;
+  recordBytesByUri: Record<string, number>;
   loading: boolean;
   loadingMore: boolean;
   hasMore: boolean;
@@ -19,6 +21,7 @@ export function RecordList({
   collection,
   records,
   selectedUri,
+  recordBytesByUri,
   loading,
   loadingMore,
   hasMore,
@@ -51,8 +54,8 @@ export function RecordList({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="space-y-1">
+    <div className="space-y-2">
+      <div className="space-y-0.5">
         {records.map((record) => {
           const selected = record.uri === selectedUri;
           return (
@@ -60,14 +63,21 @@ export function RecordList({
               key={record.uri}
               type="button"
               onClick={() => onSelect(record)}
-              className={`flex w-full flex-col gap-1 rounded-xl border px-3 py-2 text-left transition ${
+              className={`flex w-full flex-col gap-0.5 rounded-lg border px-2 py-1 text-left transition ${
                 selected
                   ? "border-emerald-500/40 bg-emerald-500/10"
                   : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900"
               }`}
             >
-              <span className="truncate text-sm text-zinc-100">
-                {recordLabel(record.value, record.uri)}
+              <span className="flex items-center justify-between gap-2">
+                <span className="truncate text-xs text-zinc-100">
+                  {recordLabel(record.value, record.uri)}
+                </span>
+                {recordBytesByUri[record.uri] !== undefined ? (
+                  <span className="shrink-0 font-mono text-[10px] text-zinc-500">
+                    {formatBytes(recordBytesByUri[record.uri])}
+                  </span>
+                ) : null}
               </span>
               <span className="truncate font-mono text-[11px] text-zinc-500">
                 {record.uri}
@@ -82,7 +92,7 @@ export function RecordList({
           type="button"
           onClick={onLoadMore}
           disabled={loadingMore}
-          className="w-full rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+          className="w-full rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
         >
           {loadingMore ? "Loading more…" : "Load more records"}
         </button>

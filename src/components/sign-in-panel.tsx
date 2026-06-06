@@ -57,7 +57,7 @@ export function SignInPanel({
         <button
           type="submit"
           disabled={loading || handle.trim().length === 0}
-          className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Connecting…" : "Sign in with OAuth"}
         </button>

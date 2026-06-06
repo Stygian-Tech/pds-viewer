@@ -1,11 +1,14 @@
 "use client";
 
+import { formatBytes } from "@/lib/format-bytes";
 import type { FolderNode } from "@/lib/tree";
+import { subtreeCollectionBytes } from "@/lib/tree-sizes";
 
 interface FolderTreeProps {
   root: FolderNode;
   selectedCollection: string | null;
   expandedPaths: Set<string>;
+  collectionBytes: Record<string, number>;
   onToggle: (path: string) => void;
   onSelectCollection: (collection: string) => void;
 }
@@ -15,6 +18,7 @@ function TreeNode({
   depth,
   selectedCollection,
   expandedPaths,
+  collectionBytes,
   onToggle,
   onSelectCollection,
 }: {
@@ -22,6 +26,7 @@ function TreeNode({
   depth: number;
   selectedCollection: string | null;
   expandedPaths: Set<string>;
+  collectionBytes: Record<string, number>;
   onToggle: (path: string) => void;
   onSelectCollection: (collection: string) => void;
 }) {
@@ -29,6 +34,11 @@ function TreeNode({
   const isExpanded = expandedPaths.has(node.path);
   const isSelected = node.collection === selectedCollection;
   const hasChildren = node.children.length > 0;
+  const sizeBytes = subtreeCollectionBytes(node, collectionBytes);
+  const sizeLabel =
+    sizeBytes > 0 || node.collection
+      ? formatBytes(sizeBytes)
+      : null;
 
   if (node.path === "") {
     return (
@@ -40,6 +50,7 @@ function TreeNode({
             depth={0}
             selectedCollection={selectedCollection}
             expandedPaths={expandedPaths}
+            collectionBytes={collectionBytes}
             onToggle={onToggle}
             onSelectCollection={onSelectCollection}
           />
@@ -61,20 +72,20 @@ function TreeNode({
             onToggle(node.path);
           }
         }}
-        className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition ${
+        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
           isSelected
             ? "bg-emerald-500/15 text-emerald-200"
             : "text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-100"
         }`}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        style={{ paddingLeft: `${depth * 16 + 10}px` }}
       >
         <span className="w-4 shrink-0 text-xs text-zinc-500">
           {hasChildren ? (isExpanded ? "▾" : "▸") : isLeaf ? "◦" : ""}
         </span>
-        <span className="font-mono text-[13px]">{node.name}</span>
-        {isLeaf ? (
-          <span className="ml-auto text-[10px] uppercase tracking-wide text-zinc-500">
-            collection
+        <span className="truncate font-mono text-xs">{node.name}</span>
+        {sizeLabel ? (
+          <span className="ml-auto shrink-0 font-mono text-[10px] text-zinc-500">
+            {sizeLabel}
           </span>
         ) : null}
       </button>
@@ -88,6 +99,7 @@ function TreeNode({
               depth={depth + 1}
               selectedCollection={selectedCollection}
               expandedPaths={expandedPaths}
+              collectionBytes={collectionBytes}
               onToggle={onToggle}
               onSelectCollection={onSelectCollection}
             />
@@ -102,16 +114,18 @@ export function FolderTree({
   root,
   selectedCollection,
   expandedPaths,
+  collectionBytes,
   onToggle,
   onSelectCollection,
 }: FolderTreeProps) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 py-1">
       <TreeNode
         node={root}
         depth={0}
         selectedCollection={selectedCollection}
         expandedPaths={expandedPaths}
+        collectionBytes={collectionBytes}
         onToggle={onToggle}
         onSelectCollection={onSelectCollection}
       />
