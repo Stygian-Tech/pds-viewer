@@ -6,6 +6,7 @@ import {
 import type { OAuthSession } from "@atproto/oauth-client";
 
 const HANDLE_RESOLVER = "https://bsky.social";
+const PRODUCTION_ORIGIN = "https://pdsviewer.dev";
 const INIT_TIMEOUT_MS = 15_000;
 
 let oauthClient: BrowserOAuthClient | null = null;
@@ -20,7 +21,7 @@ function isLoopbackHost(hostname: string): boolean {
 
 export function buildClientId(): string {
   if (typeof window === "undefined") {
-    return "https://example.com/oauth-client-metadata.json";
+    return `${PRODUCTION_ORIGIN}/oauth-client-metadata.json`;
   }
 
   if (isLoopbackHost(window.location.hostname)) {

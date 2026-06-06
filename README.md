@@ -42,16 +42,10 @@ The dev server binds to `http://127.0.0.1:3000` because ATProto loopback OAuth r
 
 Local development uses the ATProto loopback client ID helper from `@atproto/oauth-client-browser`.
 
-For deployment, update [`public/oauth-client-metadata.json`](public/oauth-client-metadata.json) so these values match your hosted origin:
-
-- `client_id`
-- `client_uri`
-- `redirect_uris`
-
-The metadata file must be reachable at:
+Production is hosted at [pdsviewer.dev](https://pdsviewer.dev). OAuth client metadata lives at:
 
 ```text
-https://your-domain.example/oauth-client-metadata.json
+https://pdsviewer.dev/oauth-client-metadata.json
 ```
 
 ## Scripts

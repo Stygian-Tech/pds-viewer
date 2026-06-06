@@ -1,8 +1,8 @@
 {
-  "client_id": "https://pds-viewer.example.com/oauth-client-metadata.json",
+  "client_id": "https://pdsviewer.dev/oauth-client-metadata.json",
   "client_name": "PDS Viewer",
-  "client_uri": "https://pds-viewer.example.com",
-  "redirect_uris": ["https://pds-viewer.example.com/"],
+  "client_uri": "https://pdsviewer.dev",
+  "redirect_uris": ["https://pdsviewer.dev/"],
   "scope": "atproto",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],

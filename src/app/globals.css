@@ -3,8 +3,8 @@
 :root {
   --background: #09090b;
   --foreground: #f4f4f5;
-  --font-system-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco,
-    Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-system-mono: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 }
 
 @theme inline {
