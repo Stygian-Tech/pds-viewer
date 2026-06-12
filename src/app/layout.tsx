@@ -2,9 +2,24 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pdsviewer.dev"),
   title: "PDS Viewer",
   description:
-    "Browse your AT Protocol PDS records like a file tree. OAuth-powered, read-only, client-side.",
+    "Browse Your AT Protocol PDS Records Like a File Tree. OAuth-Powered, Read-Only, Client-Side.",
+  openGraph: {
+    title: "PDS Viewer",
+    description:
+      "Browse Your AT Protocol PDS Records Like a File Tree. OAuth-Powered, Read-Only, Client-Side.",
+    url: "https://pdsviewer.dev",
+    siteName: "PDS Viewer",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PDS Viewer",
+    description:
+      "Browse Your AT Protocol PDS Records Like a File Tree. OAuth-Powered, Read-Only, Client-Side.",
+  },
 };
 
 export default function RootLayout({
