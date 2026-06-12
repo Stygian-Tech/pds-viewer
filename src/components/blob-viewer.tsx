@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import type { RepoBlob } from "@/lib/atproto/blobs";
 import { formatBytes } from "@/lib/format-bytes";
 
@@ -40,25 +40,24 @@ function toHexPreview(bytes: Uint8Array, maxBytes = 256): string {
 }
 
 function useBlobUrl(blob: RepoBlob | null) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-
-  useEffect(() => {
+  const blobUrl = useMemo(() => {
     if (!blob) {
-      setBlobUrl(null);
-      return;
+      return null;
     }
 
     const copy = new Uint8Array(blob.bytes);
-    const url = URL.createObjectURL(
+    return URL.createObjectURL(
       new Blob([copy], { type: blob.contentType }),
     );
-    setBlobUrl(url);
+  }, [blob]);
 
+  useEffect(() => {
     return () => {
-      URL.revokeObjectURL(url);
-      setBlobUrl(null);
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
     };
-  }, [blob?.cid, blob?.contentType, blob?.bytes.byteLength]);
+  }, [blobUrl]);
 
   return blobUrl;
 }
