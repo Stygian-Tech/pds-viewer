@@ -1,10 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import { formatBytes } from "@/lib/format-bytes";
-import { stringifyValue } from "@/lib/json";
 import type { RepoRecord } from "@/lib/atproto/repo";
 import { parseRecordUri } from "@/lib/atproto/repo";
 import { TrashIcon } from "@/components/file-browser-icons";
+import { JsonSyntax } from "@/components/json-syntax";
+
+type RecordViewTab = "fields" | "json";
+
+function valueType(value: unknown): string {
+  if (value === null) {
+    return "null";
+  }
+  if (Array.isArray(value)) {
+    return `array · ${value.length}`;
+  }
+  return typeof value;
+}
+
+function recordFields(value: unknown): Array<[string, unknown]> {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return Object.entries(value as Record<string, unknown>);
+  }
+  return [["value", value]];
+}
 
 interface RecordViewerProps {
   record: RepoRecord | null;
@@ -12,7 +32,13 @@ interface RecordViewerProps {
   onDelete: (record: RepoRecord) => void;
 }
 
-export function RecordViewer({ record, sizeBytes, onDelete }: RecordViewerProps) {
+export function RecordViewer({
+  record,
+  sizeBytes,
+  onDelete,
+}: RecordViewerProps) {
+  const [activeTab, setActiveTab] = useState<RecordViewTab>("fields");
+
   if (!record) {
     return (
       <div className="px-4 py-8 text-center text-sm text-zinc-500">
@@ -39,27 +65,101 @@ export function RecordViewer({ record, sizeBytes, onDelete }: RecordViewerProps)
           </button>
         </div>
         <div className="space-y-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-wide text-zinc-500">URI</p>
-          <p className="break-all font-mono text-xs text-zinc-200">{record.uri}</p>
-        </div>
-        <div>
-          <p className="text-[11px] uppercase tracking-wide text-zinc-500">CID</p>
-          <p className="break-all font-mono text-xs text-zinc-200">{record.cid}</p>
-        </div>
-        {sizeBytes !== undefined ? (
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Size</p>
-            <p className="font-mono text-xs text-zinc-200">{formatBytes(sizeBytes)}</p>
+            <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+              URI
+            </p>
+            <p className="break-all font-mono text-xs text-zinc-200">
+              {record.uri}
+            </p>
           </div>
-        ) : null}
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+              CID
+            </p>
+            <p className="break-all font-mono text-xs text-zinc-200">
+              {record.cid}
+            </p>
+          </div>
+          {sizeBytes !== undefined ? (
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                Size
+              </p>
+              <p className="font-mono text-xs text-zinc-200">
+                {formatBytes(sizeBytes)}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="border-b border-zinc-800 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">JSON</div>
-      <pre className="w-full max-w-full overflow-x-auto whitespace-pre bg-[#101010] p-4 font-mono text-xs leading-6 text-emerald-100">
-        {stringifyValue(record.value)}
-      </pre>
+      <div className="border-b border-zinc-800 bg-[#141414] px-3 pt-2">
+        <div role="tablist" aria-label="Record value view" className="flex gap-1">
+          <RecordTab
+            active={activeTab === "fields"}
+            label="Fields"
+            onClick={() => setActiveTab("fields")}
+          />
+          <RecordTab
+            active={activeTab === "json"}
+            label="Raw JSON"
+            onClick={() => setActiveTab("json")}
+          />
+        </div>
+      </div>
+
+      {activeTab === "fields" ? (
+        <dl className="divide-y divide-[#2b2b2b] bg-[#101010]">
+          {recordFields(record.value).map(([key, value]) => (
+            <div key={key} className="px-4 py-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <dt className="break-all text-xs font-medium text-sky-300">
+                  {key}
+                </dt>
+                <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+                  {valueType(value)}
+                </span>
+              </div>
+              <dd>
+                <pre className="w-full max-w-full overflow-x-auto whitespace-pre font-mono text-xs leading-6">
+                  <JsonSyntax value={value} />
+                </pre>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <pre className="w-full max-w-full overflow-x-auto whitespace-pre bg-[#101010] p-4 font-mono text-xs leading-6">
+          <JsonSyntax value={record.value} />
+        </pre>
+      )}
     </div>
+  );
+}
+
+function RecordTab({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`border-b-2 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition ${
+        active
+          ? "border-emerald-400 text-zinc-100"
+          : "border-transparent text-zinc-500 hover:text-zinc-300"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

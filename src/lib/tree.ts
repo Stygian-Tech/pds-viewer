@@ -64,3 +64,21 @@ export function flattenCollections(node: FolderNode): string[] {
   }
   return collections;
 }
+
+export function findFolderNode(
+  root: FolderNode,
+  path: string,
+): FolderNode | null {
+  if (root.path === path) {
+    return root;
+  }
+
+  for (const child of root.children) {
+    const match = findFolderNode(child, path);
+    if (match) {
+      return match;
+    }
+  }
+
+  return null;
+}

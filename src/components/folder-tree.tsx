@@ -7,33 +7,33 @@ import { FolderIcon, RecordIcon } from "@/components/file-browser-icons";
 
 interface FolderTreeProps {
   root: FolderNode;
-  selectedCollection: string | null;
+  selectedPath: string;
   expandedPaths: Set<string>;
   collectionBytes: Record<string, number>;
   onToggle: (path: string) => void;
-  onSelectCollection: (collection: string) => void;
+  onSelectNode: (node: FolderNode) => void;
 }
 
 function TreeNode({
   node,
   depth,
-  selectedCollection,
+  selectedPath,
   expandedPaths,
   collectionBytes,
   onToggle,
-  onSelectCollection,
+  onSelectNode,
 }: {
   node: FolderNode;
   depth: number;
-  selectedCollection: string | null;
+  selectedPath: string;
   expandedPaths: Set<string>;
   collectionBytes: Record<string, number>;
   onToggle: (path: string) => void;
-  onSelectCollection: (collection: string) => void;
+  onSelectNode: (node: FolderNode) => void;
 }) {
   const isLeaf = Boolean(node.collection);
   const isExpanded = expandedPaths.has(node.path);
-  const isSelected = node.collection === selectedCollection;
+  const isSelected = node.path === selectedPath;
   const hasChildren = node.children.length > 0;
   const sizeBytes = subtreeCollectionBytes(node, collectionBytes);
   const sizeLabel =
@@ -49,11 +49,11 @@ function TreeNode({
             key={child.path}
             node={child}
             depth={0}
-            selectedCollection={selectedCollection}
+            selectedPath={selectedPath}
             expandedPaths={expandedPaths}
             collectionBytes={collectionBytes}
             onToggle={onToggle}
-            onSelectCollection={onSelectCollection}
+            onSelectNode={onSelectNode}
           />
         ))}
       </>
@@ -65,10 +65,7 @@ function TreeNode({
       <button
         type="button"
         onClick={() => {
-          if (isLeaf && node.collection) {
-            onSelectCollection(node.collection);
-            return;
-          }
+          onSelectNode(node);
           if (hasChildren) {
             onToggle(node.path);
           }
@@ -103,11 +100,11 @@ function TreeNode({
               key={child.path}
               node={child}
               depth={depth + 1}
-              selectedCollection={selectedCollection}
+              selectedPath={selectedPath}
               expandedPaths={expandedPaths}
               collectionBytes={collectionBytes}
               onToggle={onToggle}
-              onSelectCollection={onSelectCollection}
+              onSelectNode={onSelectNode}
             />
           ))}
         </div>
@@ -118,22 +115,22 @@ function TreeNode({
 
 export function FolderTree({
   root,
-  selectedCollection,
+  selectedPath,
   expandedPaths,
   collectionBytes,
   onToggle,
-  onSelectCollection,
+  onSelectNode,
 }: FolderTreeProps) {
   return (
     <div className="space-y-0.5 py-1">
       <TreeNode
         node={root}
         depth={0}
-        selectedCollection={selectedCollection}
+        selectedPath={selectedPath}
         expandedPaths={expandedPaths}
         collectionBytes={collectionBytes}
         onToggle={onToggle}
-        onSelectCollection={onSelectCollection}
+        onSelectNode={onSelectNode}
       />
     </div>
   );

@@ -29,7 +29,12 @@ import {
   type RepoSizeIndex,
   type SizeScanProgress,
 } from "@/lib/atproto/repo-sizes";
-import { buildFolderTree } from "@/lib/tree";
+import {
+  buildFolderTree,
+  findFolderNode,
+  type FolderNode,
+} from "@/lib/tree";
+import { subtreeCollectionBytes } from "@/lib/tree-sizes";
 import { BlobContent, BlobDetails } from "@/components/blob-viewer";
 import { BlobList } from "@/components/blob-list";
 import { FolderTree } from "@/components/folder-tree";
@@ -38,6 +43,7 @@ import {
   type LeftColumnTab,
 } from "@/components/left-column-tabs";
 import { RecordList } from "@/components/record-list";
+import { NamespaceContents } from "@/components/namespace-contents";
 import { RecordViewer } from "@/components/record-viewer";
 import { DeleteRecordDialog } from "@/components/delete-record-dialog";
 import { FolderIcon, RefreshIcon } from "@/components/file-browser-icons";
@@ -60,7 +66,7 @@ export function PdsBrowserApp() {
   const [repoError, setRepoError] = useState<string | null>(null);
   const [signingIn, setSigningIn] = useState(false);
   const [loadingRepo, setLoadingRepo] = useState(false);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
+  const [selectedPath, setSelectedPath] = useState("");
   const [records, setRecords] = useState<RepoRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<RepoRecord | null>(null);
   const [recordPendingDeletion, setRecordPendingDeletion] = useState<RepoRecord | null>(null);
@@ -87,10 +93,16 @@ export function PdsBrowserApp() {
     useState<SizeScanProgress | null>(null);
   const [sizeScanError, setSizeScanError] = useState<string | null>(null);
   const sizeScanAbortRef = useRef<AbortController | null>(null);
+  const recordsRequestRef = useRef(0);
 
   const folderTree = useMemo(
     () => (repo ? buildFolderTree(repo.collections) : null),
     [repo],
+  );
+
+  const selectedNode = useMemo(
+    () => (folderTree ? findFolderNode(folderTree, selectedPath) : null),
+    [folderTree, selectedPath],
   );
 
   const startSizeScan = useCallback(
@@ -145,7 +157,8 @@ export function PdsBrowserApp() {
       setRepo(description);
       startSizeScan(nextAgent, did, description.collections);
       setExpandedPaths(new Set());
-      setSelectedCollection(null);
+      setSelectedPath("");
+      recordsRequestRef.current += 1;
       setRecords([]);
       setSelectedRecord(null);
       setRecordsCursor(undefined);
@@ -237,7 +250,8 @@ export function PdsBrowserApp() {
     setSession(null);
     setAgent(null);
     setRepo(null);
-    setSelectedCollection(null);
+    setSelectedPath("");
+    recordsRequestRef.current += 1;
     setRecords([]);
     setSelectedRecord(null);
     setLeftTab("collections");
@@ -263,12 +277,13 @@ export function PdsBrowserApp() {
     });
   };
 
-  const expandPathForCollection = (collection: string) => {
-    const segments = collection.split(".");
+  const revealPath = (node: FolderNode, includeNode: boolean) => {
+    const segments = node.path.split(".");
     const paths: string[] = [];
     let path = "";
 
-    for (let index = 0; index < segments.length - 1; index += 1) {
+    const pathCount = includeNode ? segments.length : segments.length - 1;
+    for (let index = 0; index < pathCount; index += 1) {
       path = path ? `${path}.${segments[index]}` : segments[index];
       paths.push(path);
     }
@@ -291,6 +306,8 @@ export function PdsBrowserApp() {
       return;
     }
 
+    const requestId = ++recordsRequestRef.current;
+
     if (append) {
       setRecordsLoadingMore(true);
     } else {
@@ -301,24 +318,44 @@ export function PdsBrowserApp() {
 
     try {
       const page = await listRecordsPage(agent, session.did, collection, cursor);
+      if (requestId !== recordsRequestRef.current) {
+        return;
+      }
       setRecords((current) =>
         append ? [...current, ...page.records] : page.records,
       );
       setRecordsCursor(page.cursor);
     } catch (error) {
+      if (requestId !== recordsRequestRef.current) {
+        return;
+      }
       setRecordsError(
         error instanceof Error ? error.message : "Failed to load records",
       );
     } finally {
-      setRecordsLoading(false);
-      setRecordsLoadingMore(false);
+      if (requestId === recordsRequestRef.current) {
+        setRecordsLoading(false);
+        setRecordsLoadingMore(false);
+      }
     }
   };
 
-  const handleSelectCollection = async (collection: string) => {
-    setSelectedCollection(collection);
-    expandPathForCollection(collection);
-    await loadCollectionRecords(collection);
+  const handleSelectNode = async (node: FolderNode, revealNode = false) => {
+    setSelectedPath(node.path);
+    setSelectedRecord(null);
+    revealPath(node, revealNode);
+
+    if (node.collection) {
+      await loadCollectionRecords(node.collection);
+      return;
+    }
+
+    recordsRequestRef.current += 1;
+    setRecords([]);
+    setRecordsCursor(undefined);
+    setRecordsError(null);
+    setRecordsLoading(false);
+    setRecordsLoadingMore(false);
   };
 
   const handleDeleteRecord = async () => {
@@ -452,10 +489,9 @@ export function PdsBrowserApp() {
     );
   }
 
-  const selectedCollectionBytes =
-    selectedCollection !== null
-      ? sizeIndex.collectionBytes[selectedCollection]
-      : undefined;
+  const selectedNodeBytes = selectedNode
+    ? subtreeCollectionBytes(selectedNode, sizeIndex.collectionBytes)
+    : undefined;
 
   const sizeScanLabel = (() => {
     if (sizeScanError) {
@@ -495,11 +531,13 @@ export function PdsBrowserApp() {
         folderTree ? (
           <FolderTree
             root={folderTree}
-            selectedCollection={selectedCollection}
+            selectedPath={selectedPath}
             expandedPaths={expandedPaths}
             collectionBytes={sizeIndex.collectionBytes}
             onToggle={handleTogglePath}
-            onSelectCollection={handleSelectCollection}
+            onSelectNode={(node) => {
+              void handleSelectNode(node);
+            }}
           />
         ) : (
           <p className="text-sm text-zinc-500">No collections loaded.</p>
@@ -529,38 +567,53 @@ export function PdsBrowserApp() {
   const middlePanel =
     leftTab === "collections" ? (
       <BrowserColumn
-        title="Records"
-        subtitle={selectedCollection ?? "Select a collection"}
+        title={selectedNode?.collection ? "Records" : "Folders"}
+        subtitle={selectedPath || repo?.handle || "Repository root"}
         badge={
-          selectedCollectionBytes !== undefined
-            ? formatBytes(selectedCollectionBytes)
+          selectedNodeBytes !== undefined
+            ? formatBytes(selectedNodeBytes)
             : undefined
         }
       >
-        {selectedCollection ? (
-          <RecordList
-            collection={selectedCollection}
-            records={records}
-            selectedUri={selectedRecord?.uri ?? null}
-            recordBytesByUri={sizeIndex.recordBytesByUri}
-            loading={recordsLoading}
-            loadingMore={recordsLoadingMore}
-            hasMore={Boolean(recordsCursor)}
-            error={recordsError}
-            onSelect={setSelectedRecord}
-            onLoadMore={() => {
-              if (selectedCollection && recordsCursor) {
-                void loadCollectionRecords(
-                  selectedCollection,
-                  recordsCursor,
-                  true,
-                );
-              }
-            }}
-          />
+        {selectedNode ? (
+          <>
+            <NamespaceContents
+              node={selectedNode}
+              collectionBytes={sizeIndex.collectionBytes}
+              onSelectNode={(node) => {
+                void handleSelectNode(node, true);
+              }}
+            />
+            {selectedNode.collection ? (
+              <RecordList
+                collection={selectedNode.collection}
+                records={records}
+                selectedUri={selectedRecord?.uri ?? null}
+                recordBytesByUri={sizeIndex.recordBytesByUri}
+                loading={recordsLoading}
+                loadingMore={recordsLoadingMore}
+                hasMore={Boolean(recordsCursor)}
+                error={recordsError}
+                onSelect={setSelectedRecord}
+                onLoadMore={() => {
+                  if (selectedNode.collection && recordsCursor) {
+                    void loadCollectionRecords(
+                      selectedNode.collection,
+                      recordsCursor,
+                      true,
+                    );
+                  }
+                }}
+              />
+            ) : selectedNode.children.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-zinc-500">
+                This namespace has no child folders.
+              </p>
+            ) : null}
+          </>
         ) : (
-          <p className="py-8 text-center text-sm text-zinc-500">
-            Pick a collection from the tree.
+          <p className="px-4 py-8 text-center text-sm text-zinc-500">
+            Select a namespace from the tree.
           </p>
         )}
       </BrowserColumn>
