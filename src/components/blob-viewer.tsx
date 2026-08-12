@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, type ReactNode } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { RepoBlob } from "@/lib/atproto/blobs";
 import { formatBytes } from "@/lib/format-bytes";
 
@@ -60,6 +61,54 @@ function useBlobUrl(blob: RepoBlob | null) {
   }, [blobUrl]);
 
   return blobUrl;
+}
+
+function useImageDimensions(src: string | null) {
+  const [result, setResult] = useState<{
+    src: string;
+    dimensions: { width: number; height: number } | null;
+    failed: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!src) {
+      return;
+    }
+
+    let cancelled = false;
+    const image = new window.Image();
+
+    image.onload = () => {
+      if (!cancelled) {
+        setResult({
+          src,
+          dimensions: {
+            width: Math.max(1, image.naturalWidth),
+            height: Math.max(1, image.naturalHeight),
+          },
+          failed: false,
+        });
+      }
+    };
+    image.onerror = () => {
+      if (!cancelled) {
+        setResult({ src, dimensions: null, failed: true });
+      }
+    };
+    image.src = src;
+
+    return () => {
+      cancelled = true;
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [src]);
+
+  if (!src || result?.src !== src) {
+    return { dimensions: null, failed: false };
+  }
+
+  return { dimensions: result.dimensions, failed: result.failed };
 }
 
 function BlobStatus({
@@ -131,6 +180,11 @@ export function BlobDetails({ blob, loading, error }: BlobPanelProps) {
 
 export function BlobContent({ blob, loading, error }: BlobPanelProps) {
   const blobUrl = useBlobUrl(blob);
+  const imagePreview = isImageContentType(blob?.contentType ?? "")
+    ? blobUrl
+    : null;
+  const { dimensions: imageDimensions, failed: imageFailed } =
+    useImageDimensions(imagePreview);
 
   const needsObjectUrl =
     blob !== null &&
@@ -138,11 +192,23 @@ export function BlobContent({ blob, loading, error }: BlobPanelProps) {
       isAudioContentType(blob.contentType) ||
       isVideoContentType(blob.contentType));
 
-  if (loading || error || !blob || (needsObjectUrl && !blobUrl)) {
+  if (
+    loading ||
+    error ||
+    !blob ||
+    (needsObjectUrl && !blobUrl) ||
+    (imagePreview && !imageDimensions)
+  ) {
     return (
       <BlobStatus
-        loading={loading || (needsObjectUrl && !blobUrl)}
-        error={error}
+        loading={
+          loading ||
+          (needsObjectUrl && !blobUrl) ||
+          Boolean(imagePreview && !imageDimensions && !imageFailed)
+        }
+        error={
+          error ?? (imageFailed ? "Unable to preview this image." : null)
+        }
         emptyMessage="Select a blob to inspect its contents."
       />
     );
@@ -150,11 +216,14 @@ export function BlobContent({ blob, loading, error }: BlobPanelProps) {
 
   let preview: ReactNode;
 
-  if (isImageContentType(blob.contentType) && blobUrl) {
+  if (isImageContentType(blob.contentType) && blobUrl && imageDimensions) {
     preview = (
-      <img
+      <Image
         src={blobUrl}
         alt={blob.cid}
+        width={imageDimensions.width}
+        height={imageDimensions.height}
+        unoptimized
         className="max-h-[60vh] max-w-full rounded-lg border border-zinc-800 bg-black/40 object-contain"
       />
     );

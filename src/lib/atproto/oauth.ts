@@ -7,6 +7,7 @@ import type { OAuthSession } from "@atproto/oauth-client";
 
 const HANDLE_RESOLVER = "https://bsky.social";
 const PRODUCTION_ORIGIN = "https://pdsviewer.dev";
+const WRITE_SCOPE = "atproto transition:generic";
 const INIT_TIMEOUT_MS = 15_000;
 
 let oauthClient: BrowserOAuthClient | null = null;
@@ -25,7 +26,9 @@ export function buildClientId(): string {
   }
 
   if (isLoopbackHost(window.location.hostname)) {
-    return buildLoopbackClientId(window.location);
+    const clientId = new URL(buildLoopbackClientId(window.location));
+    clientId.searchParams.set("scope", WRITE_SCOPE);
+    return clientId.toString();
   }
 
   return `${window.location.origin}/oauth-client-metadata.json`;

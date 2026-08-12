@@ -8,7 +8,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "assets": "node scripts/generate-brand-assets.mjs",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "bun test"
   },
   "dependencies": {
     "@atproto/api": "^0.20.9",

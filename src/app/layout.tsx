@@ -5,11 +5,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://pdsviewer.dev"),
   title: "PDS Viewer",
   description:
-    "Browse Your AT Protocol PDS Records Like a File Tree. OAuth-Powered, Read-Only, Client-Side.",
+    "Browse and carefully manage your AT Protocol PDS records in a client-side file browser.",
   openGraph: {
     title: "PDS Viewer",
     description:
-      "Browse Your AT Protocol PDS Records Like a File Tree. OAuth-Powered, Read-Only, Client-Side.",
+      "Browse and carefully manage your AT Protocol PDS records in a client-side file browser.",
     url: "https://pdsviewer.dev",
     siteName: "PDS Viewer",
     type: "website",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PDS Viewer",
     description:
-      "Browse Your AT Protocol PDS Records Like a File Tree. OAuth-Powered, Read-Only, Client-Side.",
+      "Browse and carefully manage your AT Protocol PDS records in a client-side file browser.",
   },
 };
 

@@ -73,3 +73,34 @@ export async function listAllRecords(
 
   return allRecords;
 }
+
+export interface RecordAddress {
+  collection: string;
+  rkey: string;
+}
+
+export function parseRecordUri(uri: string): RecordAddress {
+  const match = /^at:\/\/[^/]+\/([^/]+)\/(.+)$/.exec(uri);
+  if (!match) {
+    throw new Error("The selected record has an invalid AT URI");
+  }
+
+  return {
+    collection: decodeURIComponent(match[1]),
+    rkey: decodeURIComponent(match[2]),
+  };
+}
+
+export async function deleteRepoRecord(
+  agent: Agent,
+  repo: string,
+  record: RepoRecord,
+): Promise<void> {
+  const { collection, rkey } = parseRecordUri(record.uri);
+  await agent.com.atproto.repo.deleteRecord({
+    repo,
+    collection,
+    rkey,
+    swapRecord: record.cid,
+  });
+}

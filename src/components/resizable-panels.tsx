@@ -23,9 +23,9 @@ export function BrowserColumn({
 }: BrowserColumnProps) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      <div className="shrink-0 border-b border-zinc-800/60 px-4 py-3">
+      <div className="shrink-0 border-b border-[#2b2b2b] bg-[#141414] px-4 py-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-medium text-zinc-300">{title}</h2>
+          <h2 className="text-xs font-semibold text-zinc-300">{title}</h2>
           {badge !== undefined ? (
             <span className="text-xs text-zinc-500">{badge}</span>
           ) : null}
@@ -36,7 +36,7 @@ export function BrowserColumn({
           </p>
         ) : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3">
+      <div className="min-h-0 flex-1 overflow-auto">
         {children}
       </div>
     </div>
@@ -57,7 +57,7 @@ function ResizeHandle({
         event.preventDefault();
         onDragStart(event.clientX);
       }}
-      className="group relative z-10 w-1 shrink-0 cursor-col-resize bg-zinc-800/40 transition-colors hover:bg-emerald-500/40"
+      className="group relative z-10 w-px shrink-0 cursor-col-resize bg-[#2b2b2b] transition-colors hover:bg-emerald-500/50"
     >
       <div className="absolute inset-y-0 -left-1 -right-1" />
     </div>
@@ -164,7 +164,7 @@ export function ResizablePanels({
     <div ref={containerRef} className="hidden min-h-0 flex-1 lg:flex">
       <div
         style={{ width: leftWidth }}
-        className="flex min-h-0 shrink-0 flex-col border-r border-zinc-800"
+        className="flex min-h-0 shrink-0 flex-col bg-[#141414]"
       >
         {left}
       </div>
@@ -173,14 +173,14 @@ export function ResizablePanels({
 
       <div
         style={{ width: middleWidth }}
-        className="flex min-h-0 shrink-0 flex-col border-r border-zinc-800"
+        className="flex min-h-0 shrink-0 flex-col bg-[#141414]"
       >
         {middle}
       </div>
 
       <ResizeHandle onDragStart={(clientX) => startDrag("middle", clientX)} />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{right}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#141414]">{right}</div>
     </div>
   );
 }

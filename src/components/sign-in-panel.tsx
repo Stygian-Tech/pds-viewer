@@ -16,7 +16,7 @@ export function SignInPanel({
   onSignIn,
 }: SignInPanelProps) {
   return (
-    <section className="mx-auto flex w-full max-w-lg flex-col gap-6 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-8 shadow-2xl shadow-black/40">
+    <section className="mx-auto flex w-full max-w-lg flex-col gap-6 rounded-2xl border border-[#303030] bg-[#191919] p-8 shadow-2xl shadow-black/40">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400">
           AT Protocol
@@ -24,7 +24,8 @@ export function SignInPanel({
         <h1 className="text-3xl font-semibold text-zinc-50">PDS Viewer</h1>
         <p className="text-sm leading-6 text-zinc-400">
           Sign in with your handle to browse every collection in your personal
-          data server like a file tree. Pure curiosity, read-only.
+          data server like a file tree. Record deletion is available behind a
+          deliberate two-step safety check.
         </p>
       </div>
 
@@ -42,7 +43,7 @@ export function SignInPanel({
             value={handle}
             onChange={(event) => onHandleChange(event.target.value)}
             placeholder="you.bsky.social"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
+            className="w-full rounded-xl border border-zinc-700 bg-[#101010] px-4 py-3 text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
             autoComplete="username"
             disabled={loading}
           />
@@ -65,7 +66,8 @@ export function SignInPanel({
 
       <p className="text-xs leading-5 text-zinc-500">
         OAuth runs entirely in your browser. Handle resolution uses the public
-        Bluesky resolver for convenience during local development.
+        Bluesky resolver for convenience during local development. Deleting a
+        record writes directly to your PDS and cannot be undone here.
       </p>
     </section>
   );

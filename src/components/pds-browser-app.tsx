@@ -15,6 +15,7 @@ import {
   type RepoBlob,
 } from "@/lib/atproto/blobs";
 import {
+  deleteRepoRecord,
   describeRepo,
   listRecordsPage,
   type RepoDescription,
@@ -38,6 +39,8 @@ import {
 } from "@/components/left-column-tabs";
 import { RecordList } from "@/components/record-list";
 import { RecordViewer } from "@/components/record-viewer";
+import { DeleteRecordDialog } from "@/components/delete-record-dialog";
+import { FolderIcon, RefreshIcon } from "@/components/file-browser-icons";
 import { SignInPanel } from "@/components/sign-in-panel";
 import {
   BrowserColumn,
@@ -60,6 +63,9 @@ export function PdsBrowserApp() {
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [records, setRecords] = useState<RepoRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<RepoRecord | null>(null);
+  const [recordPendingDeletion, setRecordPendingDeletion] = useState<RepoRecord | null>(null);
+  const [recordDeleting, setRecordDeleting] = useState(false);
+  const [recordDeleteError, setRecordDeleteError] = useState<string | null>(null);
   const [recordsCursor, setRecordsCursor] = useState<string | undefined>();
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [recordsLoadingMore, setRecordsLoadingMore] = useState(false);
@@ -315,6 +321,33 @@ export function PdsBrowserApp() {
     await loadCollectionRecords(collection);
   };
 
+  const handleDeleteRecord = async () => {
+    if (!agent || !session || !recordPendingDeletion) {
+      return;
+    }
+
+    setRecordDeleting(true);
+    setRecordDeleteError(null);
+
+    try {
+      await deleteRepoRecord(agent, session.did, recordPendingDeletion);
+      setRecords((current) =>
+        current.filter((record) => record.uri !== recordPendingDeletion.uri),
+      );
+      setSelectedRecord(null);
+      setRecordPendingDeletion(null);
+      if (repo) {
+        startSizeScan(agent, session.did, repo.collections);
+      }
+    } catch (error) {
+      setRecordDeleteError(
+        error instanceof Error ? error.message : "Failed to delete record",
+      );
+    } finally {
+      setRecordDeleting(false);
+    }
+  };
+
   const loadBlobs = async (cursor?: string, append = false) => {
     if (!agent || !session) {
       return;
@@ -413,7 +446,7 @@ export function PdsBrowserApp() {
 
   if (status === "booting") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-400">
+      <div className="flex min-h-screen items-center justify-center bg-[#141414] text-sm text-zinc-400">
         Restoring OAuth session…
       </div>
     );
@@ -439,7 +472,7 @@ export function PdsBrowserApp() {
 
   if (status === "signed-out") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_#14532d33,_transparent_55%),_linear-gradient(180deg,_#09090b,_#020617)] px-6 py-12">
+      <div className="flex min-h-screen items-center justify-center bg-[#141414] px-6 py-12">
         <SignInPanel
           handle={handleInput}
           loading={signingIn}
@@ -554,6 +587,10 @@ export function PdsBrowserApp() {
               ? sizeIndex.recordBytesByUri[selectedRecord.uri]
               : undefined
           }
+          onDelete={(record) => {
+            setRecordDeleteError(null);
+            setRecordPendingDeletion(record);
+          }}
         />
       </BrowserColumn>
     ) : (
@@ -567,43 +604,47 @@ export function PdsBrowserApp() {
     );
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100">
-      <header className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-emerald-400">
-            PDS Viewer
-          </p>
-          <h1 className="text-lg font-semibold">
-            {repo?.handle ?? session?.did}
-          </h1>
-          <p className="font-mono text-xs text-zinc-500">{session?.did}</p>
-          <p className="mt-1 text-xs text-zinc-400">
-            Repo size{" "}
-            <span className="font-mono text-zinc-300">
-              {formatBytes(totalRepoBytes(sizeIndex))}
-            </span>
-            {sizeIndex.recordCount > 0 || sizeIndex.blobCount > 0 ? (
-              <span className="text-zinc-500">
-                {" "}
-                (records {formatBytes(sizeIndex.totalRecordBytes)} · blobs{" "}
-                {formatBytes(sizeIndex.totalBlobBytes)})
+    <div className="flex h-screen flex-col overflow-hidden bg-[#141414] text-zinc-100">
+      <header className="flex min-h-14 items-center justify-between gap-4 border-b border-[#2b2b2b] bg-[#141414] px-4 py-2">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex shrink-0 items-center gap-2 border-r border-[#2b2b2b] pr-3 text-zinc-100 sm:pr-4">
+            <FolderIcon className="size-5 text-emerald-400" />
+            <span className="hidden text-sm font-semibold sm:inline">PDS Viewer</span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="truncate text-xs font-medium">{repo?.handle ?? session?.did}</h1>
+              <p className="hidden truncate text-[10px] text-zinc-600 md:block">{session?.did}</p>
+            </div>
+            <p className="mt-0.5 text-[10px] text-zinc-500">
+              Repo size{" "}
+              <span className="font-mono text-zinc-300">
+                {formatBytes(totalRepoBytes(sizeIndex))}
               </span>
-            ) : null}
-          </p>
-          {sizeScanLabel ? (
-            <p
-              className={`mt-0.5 text-xs ${
-                sizeScanError ? "text-red-300" : "text-zinc-500"
-              }`}
-            >
-              {sizeScanLabel}
+              {sizeIndex.recordCount > 0 || sizeIndex.blobCount > 0 ? (
+                <span className="hidden text-zinc-600 sm:inline">
+                  {" "}
+                  (records {formatBytes(sizeIndex.totalRecordBytes)} · blobs{" "}
+                  {formatBytes(sizeIndex.totalBlobBytes)})
+                </span>
+              ) : null}
+              {sizeScanLabel ? (
+                <span
+                  className={`ml-2 text-[10px] ${
+                    sizeScanError ? "text-red-300" : "text-zinc-500"
+                  }`}
+                >
+                  {sizeScanLabel}
+                </span>
+              ) : null}
             </p>
-          ) : null}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             type="button"
+            aria-label={loadingRepo ? "Refreshing repository" : "Refresh repository"}
             onClick={() => {
               if (agent && session) {
                 void loadRepo(agent, session.did).then(() => {
@@ -614,14 +655,17 @@ export function PdsBrowserApp() {
               }
             }}
             disabled={loadingRepo}
-            className="rounded-md border border-zinc-700 px-1.5 py-0.5 text-[9px] leading-tight text-zinc-300 transition hover:border-zinc-500 hover:text-white disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md border border-[#333] px-2.5 py-1.5 text-[10px] text-zinc-400 transition hover:border-zinc-500 hover:bg-[#1b1b1b] hover:text-white disabled:opacity-50"
           >
-            {loadingRepo ? "Refreshing…" : "Refresh repo"}
+            <RefreshIcon className="size-3.5" />
+            <span className="hidden sm:inline">
+              {loadingRepo ? "Refreshing…" : "Refresh repo"}
+            </span>
           </button>
           <button
             type="button"
             onClick={handleSignOut}
-            className="rounded-md border border-zinc-700 px-1.5 py-0.5 text-[9px] leading-tight text-zinc-300 transition hover:border-red-500/50 hover:text-red-200"
+            className="rounded-md border border-[#333] px-2.5 py-1.5 text-[10px] text-zinc-400 transition hover:border-zinc-500 hover:bg-[#1b1b1b] hover:text-white"
           >
             Sign out
           </button>
@@ -644,6 +688,22 @@ export function PdsBrowserApp() {
         middle={middlePanel}
         right={rightPanel}
       />
+      {recordPendingDeletion ? (
+        <DeleteRecordDialog
+          record={recordPendingDeletion}
+          deleting={recordDeleting}
+          error={recordDeleteError}
+          onCancel={() => {
+            if (!recordDeleting) {
+              setRecordDeleteError(null);
+              setRecordPendingDeletion(null);
+            }
+          }}
+          onConfirm={() => {
+            void handleDeleteRecord();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

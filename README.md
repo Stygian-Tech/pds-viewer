@@ -1,8 +1,8 @@
 # PDS Viewer
 
-A read-only, client-side Next.js app for browsing your AT Protocol PDS like a file tree.
+A client-side Next.js app for browsing and carefully managing your AT Protocol PDS like a file tree.
 
-Sign in with OAuth, discover every collection in your repo via `com.atproto.repo.describeRepo`, then inspect records with paginated `com.atproto.repo.listRecords` calls. Collection NSIDs are rendered as nested folders, so `link.latr.saved.item.external` appears as:
+Sign in with OAuth, discover every collection in your repo via `com.atproto.repo.describeRepo`, then inspect records with paginated `com.atproto.repo.listRecords` calls. Selected records can be deleted through a two-step confirmation flow backed by `com.atproto.repo.deleteRecord`. Collection NSIDs are rendered as nested folders, so `link.latr.saved.item.external` appears as:
 
 ```text
 link
@@ -19,7 +19,7 @@ link
 - `@atproto/oauth-client-browser`
 - `@atproto/api`
 
-All OAuth session handling and repo reads happen in the browser.
+All OAuth session handling and repo operations happen in the browser.
 
 ## Local development
 
@@ -37,12 +37,13 @@ The dev server binds to `http://127.0.0.1:3000` because ATProto loopback OAuth r
 3. Browse collections in the left tree.
 4. Select a collection to load records.
 5. Click a record to inspect its JSON.
+6. If necessary, delete a selected record after acknowledging the risk and typing its exact record key.
 
 ## OAuth metadata
 
 Local development uses the ATProto loopback client ID helper from `@atproto/oauth-client-browser`.
 
-Production is hosted at [pdsviewer.dev](https://pdsviewer.dev). OAuth client metadata lives at:
+Production is hosted on Railway at [pdsviewer.dev](https://pdsviewer.dev). OAuth client metadata lives at:
 
 ```text
 https://pdsviewer.dev/oauth-client-metadata.json
@@ -53,6 +54,7 @@ https://pdsviewer.dev/oauth-client-metadata.json
 ```bash
 bun run dev      # next dev --turbopack
 bun run lint
+bun run test
 bun run build    # next build --turbopack
 bun run start
 ```

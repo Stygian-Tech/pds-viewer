@@ -3,6 +3,8 @@
 import { formatBytes } from "@/lib/format-bytes";
 import { recordLabel } from "@/lib/json";
 import type { RepoRecord } from "@/lib/atproto/repo";
+import { parseRecordUri } from "@/lib/atproto/repo";
+import { RecordIcon } from "@/components/file-browser-icons";
 
 interface RecordListProps {
   collection: string;
@@ -54,33 +56,40 @@ export function RecordList({
   }
 
   return (
-    <div className="space-y-2">
-      <div className="space-y-0.5">
+    <div className="min-w-[520px]">
+      <div className="grid grid-cols-[minmax(190px,1fr)_minmax(140px,.8fr)_80px] gap-3 border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+        <span>Name</span>
+        <span>Record key</span>
+        <span className="text-right">Size</span>
+      </div>
+      <div>
         {records.map((record) => {
           const selected = record.uri === selectedUri;
+          const { rkey } = parseRecordUri(record.uri);
           return (
             <button
               key={record.uri}
               type="button"
               onClick={() => onSelect(record)}
-              className={`flex w-full flex-col gap-0.5 rounded-lg border px-2 py-1 text-left transition ${
+              className={`grid w-full grid-cols-[minmax(190px,1fr)_minmax(140px,.8fr)_80px] items-center gap-3 border-b border-zinc-800/80 px-3 py-2 text-left text-xs transition ${
                 selected
-                  ? "border-emerald-500/40 bg-emerald-500/10"
-                  : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900"
+                  ? "bg-emerald-500/14 text-emerald-50"
+                  : "text-zinc-300 hover:bg-zinc-900/80"
               }`}
             >
-              <span className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-zinc-100">
+              <span className="flex min-w-0 items-center gap-2">
+                <RecordIcon className={`size-4 shrink-0 ${selected ? "text-emerald-400" : "text-zinc-500"}`} />
+                <span className="truncate">
                   {recordLabel(record.value, record.uri)}
                 </span>
-                {recordBytesByUri[record.uri] !== undefined ? (
-                  <span className="shrink-0 font-mono text-[10px] text-zinc-500">
-                    {formatBytes(recordBytesByUri[record.uri])}
-                  </span>
-                ) : null}
               </span>
-              <span className="truncate font-mono text-[11px] text-zinc-500">
-                {record.uri}
+              <span className="truncate text-[11px] text-zinc-500">
+                {rkey}
+              </span>
+              <span className="text-right text-[11px] text-zinc-500">
+                {recordBytesByUri[record.uri] !== undefined
+                  ? formatBytes(recordBytesByUri[record.uri])
+                  : "—"}
               </span>
             </button>
           );
@@ -92,7 +101,7 @@ export function RecordList({
           type="button"
           onClick={onLoadMore}
           disabled={loadingMore}
-          className="w-full rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+          className="mt-3 w-full rounded-lg border border-zinc-700 px-2 py-2 text-xs text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
         >
           {loadingMore ? "Loading more…" : "Load more records"}
         </button>

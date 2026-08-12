@@ -3,6 +3,7 @@
 import { formatBytes } from "@/lib/format-bytes";
 import type { FolderNode } from "@/lib/tree";
 import { subtreeCollectionBytes } from "@/lib/tree-sizes";
+import { FolderIcon, RecordIcon } from "@/components/file-browser-icons";
 
 interface FolderTreeProps {
   root: FolderNode;
@@ -72,16 +73,21 @@ function TreeNode({
             onToggle(node.path);
           }
         }}
-        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+        className={`group flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs transition ${
           isSelected
-            ? "bg-emerald-500/15 text-emerald-200"
-            : "text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-100"
+            ? "bg-emerald-500/15 text-emerald-100"
+            : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
         }`}
         style={{ paddingLeft: `${depth * 16 + 10}px` }}
       >
-        <span className="w-4 shrink-0 text-xs text-zinc-500">
+        <span className="w-3 shrink-0 text-[10px] text-zinc-600">
           {hasChildren ? (isExpanded ? "▾" : "▸") : isLeaf ? "◦" : ""}
         </span>
+        {isLeaf ? (
+          <RecordIcon className="size-3.5 shrink-0 text-zinc-500 group-hover:text-zinc-300" />
+        ) : (
+          <FolderIcon className={`size-3.5 shrink-0 ${isSelected ? "text-emerald-400" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+        )}
         <span className="truncate font-mono text-xs">{node.name}</span>
         {sizeLabel ? (
           <span className="ml-auto shrink-0 font-mono text-[10px] text-zinc-500">
@@ -119,7 +125,7 @@ export function FolderTree({
   onSelectCollection,
 }: FolderTreeProps) {
   return (
-    <div className="space-y-1 py-1">
+    <div className="space-y-0.5 py-1">
       <TreeNode
         node={root}
         depth={0}

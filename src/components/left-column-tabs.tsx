@@ -21,11 +21,11 @@ export function LeftColumnTabs({
 }: LeftColumnTabsProps) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      <div className="shrink-0 border-b border-zinc-800/60 px-4 py-3">
+      <div className="shrink-0 border-b border-zinc-800/80 px-4 py-3">
         <div
           role="tablist"
           aria-label="Repository browser"
-          className="flex gap-0.5 rounded-md border border-zinc-800 bg-zinc-900/60 p-0.5"
+          className="flex gap-0.5 rounded-md border border-[#303030] bg-[#101010] p-0.5"
         >
           <TabButton
             active={activeTab === "collections"}
@@ -41,7 +41,7 @@ export function LeftColumnTabs({
           />
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-2">
         {children}
       </div>
     </div>
