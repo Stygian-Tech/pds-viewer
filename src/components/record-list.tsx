@@ -33,7 +33,7 @@ export function RecordList({
 }: RecordListProps) {
   if (loading) {
     return (
-      <div className="py-8 text-center text-sm text-zinc-500">
+      <div className="px-4 py-8 text-center text-sm text-zinc-500">
         Loading records…
       </div>
     );
@@ -41,15 +41,17 @@ export function RecordList({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-        {error}
+      <div className="p-3">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+          {error}
+        </div>
       </div>
     );
   }
 
   if (records.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-zinc-500">
+      <div className="px-4 py-8 text-center text-sm text-zinc-500">
         No records in <span className="font-mono text-zinc-300">{collection}</span>
       </div>
     );
@@ -97,14 +99,16 @@ export function RecordList({
       </div>
 
       {hasMore ? (
-        <button
-          type="button"
-          onClick={onLoadMore}
-          disabled={loadingMore}
-          className="mx-3 mb-3 mt-3 w-[calc(100%-1.5rem)] rounded-lg border border-zinc-700 px-2 py-2 text-xs text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
-        >
-          {loadingMore ? "Loading more…" : "Load more records"}
-        </button>
+        <div className="p-3">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="w-full rounded-lg border border-zinc-700 px-2 py-2 text-xs text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+          >
+            {loadingMore ? "Loading more…" : "Load more records"}
+          </button>
+        </div>
       ) : null}
     </div>
   );

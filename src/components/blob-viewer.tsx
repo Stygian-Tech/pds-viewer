@@ -122,7 +122,7 @@ function BlobStatus({
 }) {
   if (loading) {
     return (
-      <div className="py-8 text-center text-sm text-zinc-500">
+      <div className="px-4 py-8 text-center text-sm text-zinc-500">
         Loading blob…
       </div>
     );
@@ -130,14 +130,16 @@ function BlobStatus({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-        {error}
+      <div className="p-3">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+          {error}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="py-8 text-center text-sm text-zinc-500">
+    <div className="px-4 py-8 text-center text-sm text-zinc-500">
       {emptyMessage}
     </div>
   );
@@ -155,7 +157,7 @@ export function BlobDetails({ blob, loading, error }: BlobPanelProps) {
   }
 
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-4 p-3">
       <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
         <div>
           <p className="text-[11px] uppercase tracking-wide text-zinc-500">CID</p>
@@ -253,7 +255,7 @@ export function BlobContent({ blob, loading, error }: BlobPanelProps) {
   }
 
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-4 p-3">
       <a
         href={blobUrl ?? undefined}
         download={blob.cid}

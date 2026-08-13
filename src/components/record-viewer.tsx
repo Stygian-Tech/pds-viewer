@@ -48,8 +48,8 @@ export function RecordViewer({
   }
 
   return (
-    <div className="min-w-0">
-      <div className="border-b border-zinc-800 px-4 py-4">
+    <div className="min-w-0 space-y-3 p-3">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Record key</p>
@@ -94,46 +94,48 @@ export function RecordViewer({
         </div>
       </div>
 
-      <div className="border-b border-zinc-800 bg-[#141414] px-3 pt-2">
-        <div role="tablist" aria-label="Record value view" className="flex gap-1">
-          <RecordTab
-            active={activeTab === "fields"}
-            label="Fields"
-            onClick={() => setActiveTab("fields")}
-          />
-          <RecordTab
-            active={activeTab === "json"}
-            label="Raw JSON"
-            onClick={() => setActiveTab("json")}
-          />
+      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-[#101010]">
+        <div className="border-b border-zinc-800 bg-[#141414] px-3 pt-2">
+          <div role="tablist" aria-label="Record value view" className="flex gap-1">
+            <RecordTab
+              active={activeTab === "fields"}
+              label="Fields"
+              onClick={() => setActiveTab("fields")}
+            />
+            <RecordTab
+              active={activeTab === "json"}
+              label="Raw JSON"
+              onClick={() => setActiveTab("json")}
+            />
+          </div>
         </div>
-      </div>
 
-      {activeTab === "fields" ? (
-        <dl className="divide-y divide-[#2b2b2b] bg-[#101010]">
-          {recordFields(record.value).map(([key, value]) => (
-            <div key={key} className="px-4 py-3">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <dt className="break-all text-xs font-medium text-sky-300">
-                  {key}
-                </dt>
-                <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
-                  {valueType(value)}
-                </span>
+        {activeTab === "fields" ? (
+          <dl className="divide-y divide-[#2b2b2b]">
+            {recordFields(record.value).map(([key, value]) => (
+              <div key={key} className="px-4 py-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <dt className="break-all text-xs font-medium text-sky-300">
+                    {key}
+                  </dt>
+                  <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+                    {valueType(value)}
+                  </span>
+                </div>
+                <dd>
+                  <pre className="w-full max-w-full overflow-x-auto whitespace-pre font-mono text-xs leading-6">
+                    <JsonSyntax value={value} />
+                  </pre>
+                </dd>
               </div>
-              <dd>
-                <pre className="w-full max-w-full overflow-x-auto whitespace-pre font-mono text-xs leading-6">
-                  <JsonSyntax value={value} />
-                </pre>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ) : (
-        <pre className="w-full max-w-full overflow-x-auto whitespace-pre bg-[#101010] p-4 font-mono text-xs leading-6">
-          <JsonSyntax value={record.value} />
-        </pre>
-      )}
+            ))}
+          </dl>
+        ) : (
+          <pre className="w-full max-w-full overflow-x-auto whitespace-pre p-4 font-mono text-xs leading-6">
+            <JsonSyntax value={record.value} />
+          </pre>
+        )}
+      </div>
     </div>
   );
 }
