@@ -7,6 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  PANEL_LAYOUT_STORAGE_KEY,
+  parseStoredPanelWidths,
+  serializePanelWidths,
+  type PanelWidths,
+} from "@/lib/panel-layout";
 
 interface BrowserColumnProps {
   title: string;
@@ -85,18 +91,72 @@ export function ResizablePanels({
   middle,
   right,
   defaultLeftWidth = 280,
-  defaultMiddleWidth = 360,
+  defaultMiddleWidth = 520,
   minLeftWidth = 180,
   minMiddleWidth = 220,
   minRightWidth = 240,
 }: ResizablePanelsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [leftWidth, setLeftWidth] = useState(defaultLeftWidth);
-  const [middleWidth, setMiddleWidth] = useState(defaultMiddleWidth);
+  const [widths, setWidths] = useState<PanelWidths>(() => {
+    const defaults = {
+      leftWidth: defaultLeftWidth,
+      middleWidth: defaultMiddleWidth,
+    };
+    if (typeof window === "undefined") {
+      return defaults;
+    }
+
+    try {
+      return (
+        parseStoredPanelWidths(
+          window.localStorage.getItem(PANEL_LAYOUT_STORAGE_KEY),
+        ) ?? defaults
+      );
+    } catch {
+      return defaults;
+    }
+  });
+  const { leftWidth, middleWidth } = widths;
+  const widthsRef = useRef(widths);
   const dragTarget = useRef<"left" | "middle" | null>(null);
   const dragStartX = useRef(0);
   const dragStartLeft = useRef(0);
   const dragStartMiddle = useRef(0);
+
+  useEffect(() => {
+    function fitWidthsToViewport() {
+      const containerWidth = containerRef.current?.clientWidth ?? 0;
+      if (containerWidth === 0) {
+        return;
+      }
+
+      const availableWidth = containerWidth - 4;
+      setWidths((current) => {
+        const leftWidth = Math.min(
+          Math.max(current.leftWidth, minLeftWidth),
+          availableWidth - minMiddleWidth - minRightWidth,
+        );
+        const middleWidth = Math.min(
+          Math.max(current.middleWidth, minMiddleWidth),
+          availableWidth - leftWidth - minRightWidth,
+        );
+        if (
+          leftWidth === current.leftWidth &&
+          middleWidth === current.middleWidth
+        ) {
+          return current;
+        }
+
+        const next = { leftWidth, middleWidth };
+        widthsRef.current = next;
+        return next;
+      });
+    }
+
+    fitWidthsToViewport();
+    window.addEventListener("resize", fitWidthsToViewport);
+    return () => window.removeEventListener("resize", fitWidthsToViewport);
+  }, [minLeftWidth, minMiddleWidth, minRightWidth]);
 
   const clampMiddleWidth = useCallback(
     (nextMiddle: number, nextLeft = leftWidth) => {
@@ -129,19 +189,37 @@ export function ResizablePanels({
       const delta = event.clientX - dragStartX.current;
 
       if (dragTarget.current === "left") {
-        setLeftWidth(clampLeftWidth(dragStartLeft.current + delta));
+        const leftWidth = clampLeftWidth(dragStartLeft.current + delta);
+        setWidths((current) => {
+          const next = { ...current, leftWidth };
+          widthsRef.current = next;
+          return next;
+        });
         return;
       }
 
-      setMiddleWidth(
-        clampMiddleWidth(
-          dragStartMiddle.current + delta,
-          dragStartLeft.current,
-        ),
+      const middleWidth = clampMiddleWidth(
+        dragStartMiddle.current + delta,
+        dragStartLeft.current,
       );
+      setWidths((current) => {
+        const next = { ...current, middleWidth };
+        widthsRef.current = next;
+        return next;
+      });
     }
 
     function onMouseUp() {
+      if (dragTarget.current) {
+        try {
+          window.localStorage.setItem(
+            PANEL_LAYOUT_STORAGE_KEY,
+            serializePanelWidths(widthsRef.current),
+          );
+        } catch {
+          // The resized layout remains usable when browser storage is unavailable.
+        }
+      }
       dragTarget.current = null;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";

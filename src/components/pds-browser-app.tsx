@@ -44,6 +44,7 @@ import {
 } from "@/components/left-column-tabs";
 import { RecordList } from "@/components/record-list";
 import { NamespaceContents } from "@/components/namespace-contents";
+import { TopLevelNamespaces } from "@/components/top-level-namespaces";
 import { RecordViewer } from "@/components/record-viewer";
 import { DeleteRecordDialog } from "@/components/delete-record-dialog";
 import { FolderIcon, RefreshIcon } from "@/components/file-browser-icons";
@@ -524,9 +525,14 @@ export function PdsBrowserApp() {
     >
       {leftTab === "collections" ? (
         folderTree ? (
-          <div className="px-2 py-3 text-xs text-zinc-500">
-            Browse the NSID folder tree in the center pane.
-          </div>
+          <TopLevelNamespaces
+            root={folderTree}
+            selectedPath={selectedPath}
+            collectionBytes={sizeIndex.collectionBytes}
+            onSelectNode={(node) => {
+              void handleSelectNode(node);
+            }}
+          />
         ) : (
           <p className="text-sm text-zinc-500">No collections loaded.</p>
         )

@@ -16,6 +16,10 @@ describe("folder tree navigation", () => {
     expect(feed?.children.map((child) => child.name)).toEqual(["like", "post"]);
   });
 
+  test("exposes sorted top-level namespaces", () => {
+    expect(tree.children.map((child) => child.name)).toEqual(["app", "com"]);
+  });
+
   test("finds collection nodes and returns null for unknown paths", () => {
     expect(findFolderNode(tree, "app.bsky.feed.post")?.collection).toBe(
       "app.bsky.feed.post",
