@@ -35,9 +35,9 @@ import {
   type FolderNode,
 } from "@/lib/tree";
 import { subtreeCollectionBytes } from "@/lib/tree-sizes";
+import { pushNavigationPath } from "@/lib/navigation-history";
 import { BlobContent, BlobDetails } from "@/components/blob-viewer";
 import { BlobList } from "@/components/blob-list";
-import { FolderTree } from "@/components/folder-tree";
 import {
   LeftColumnTabs,
   type LeftColumnTab,
@@ -67,6 +67,8 @@ export function PdsBrowserApp() {
   const [signingIn, setSigningIn] = useState(false);
   const [loadingRepo, setLoadingRepo] = useState(false);
   const [selectedPath, setSelectedPath] = useState("");
+  const [navigationPaths, setNavigationPaths] = useState<string[]>([""]);
+  const [navigationIndex, setNavigationIndex] = useState(0);
   const [records, setRecords] = useState<RepoRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<RepoRecord | null>(null);
   const [recordPendingDeletion, setRecordPendingDeletion] = useState<RepoRecord | null>(null);
@@ -76,7 +78,6 @@ export function PdsBrowserApp() {
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [recordsLoadingMore, setRecordsLoadingMore] = useState(false);
   const [recordsError, setRecordsError] = useState<string | null>(null);
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [leftTab, setLeftTab] = useState<LeftColumnTab>("collections");
   const [blobCids, setBlobCids] = useState<string[]>([]);
   const [selectedBlobCid, setSelectedBlobCid] = useState<string | null>(null);
@@ -156,8 +157,9 @@ export function PdsBrowserApp() {
       const description = await describeRepo(nextAgent, did);
       setRepo(description);
       startSizeScan(nextAgent, did, description.collections);
-      setExpandedPaths(new Set());
       setSelectedPath("");
+      setNavigationPaths([""]);
+      setNavigationIndex(0);
       recordsRequestRef.current += 1;
       setRecords([]);
       setSelectedRecord(null);
@@ -251,6 +253,8 @@ export function PdsBrowserApp() {
     setAgent(null);
     setRepo(null);
     setSelectedPath("");
+    setNavigationPaths([""]);
+    setNavigationIndex(0);
     recordsRequestRef.current += 1;
     setRecords([]);
     setSelectedRecord(null);
@@ -263,38 +267,6 @@ export function PdsBrowserApp() {
     setSizeScanProgress(null);
     setSizeScanError(null);
     setStatus("signed-out");
-  };
-
-  const handleTogglePath = (path: string) => {
-    setExpandedPaths((current) => {
-      const next = new Set(current);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
-  };
-
-  const revealPath = (node: FolderNode, includeNode: boolean) => {
-    const segments = node.path.split(".");
-    const paths: string[] = [];
-    let path = "";
-
-    const pathCount = includeNode ? segments.length : segments.length - 1;
-    for (let index = 0; index < pathCount; index += 1) {
-      path = path ? `${path}.${segments[index]}` : segments[index];
-      paths.push(path);
-    }
-
-    setExpandedPaths((current) => {
-      const next = new Set(current);
-      for (const item of paths) {
-        next.add(item);
-      }
-      return next;
-    });
   };
 
   const loadCollectionRecords = async (
@@ -340,10 +312,9 @@ export function PdsBrowserApp() {
     }
   };
 
-  const handleSelectNode = async (node: FolderNode, revealNode = false) => {
+  const showNode = async (node: FolderNode) => {
     setSelectedPath(node.path);
     setSelectedRecord(null);
-    revealPath(node, revealNode);
 
     if (node.collection) {
       await loadCollectionRecords(node.collection);
@@ -356,6 +327,30 @@ export function PdsBrowserApp() {
     setRecordsError(null);
     setRecordsLoading(false);
     setRecordsLoadingMore(false);
+  };
+
+  const handleSelectNode = async (node: FolderNode) => {
+    const nextHistory = pushNavigationPath(
+      { paths: navigationPaths, index: navigationIndex },
+      node.path,
+    );
+    setNavigationPaths(nextHistory.paths);
+    setNavigationIndex(nextHistory.index);
+    await showNode(node);
+  };
+
+  const handleNavigationHistory = async (nextIndex: number) => {
+    if (!folderTree || nextIndex < 0 || nextIndex >= navigationPaths.length) {
+      return;
+    }
+
+    const node = findFolderNode(folderTree, navigationPaths[nextIndex]);
+    if (!node) {
+      return;
+    }
+
+    setNavigationIndex(nextIndex);
+    await showNode(node);
   };
 
   const handleDeleteRecord = async () => {
@@ -529,16 +524,9 @@ export function PdsBrowserApp() {
     >
       {leftTab === "collections" ? (
         folderTree ? (
-          <FolderTree
-            root={folderTree}
-            selectedPath={selectedPath}
-            expandedPaths={expandedPaths}
-            collectionBytes={sizeIndex.collectionBytes}
-            onToggle={handleTogglePath}
-            onSelectNode={(node) => {
-              void handleSelectNode(node);
-            }}
-          />
+          <div className="px-2 py-3 text-xs text-zinc-500">
+            Browse the NSID folder tree in the center pane.
+          </div>
         ) : (
           <p className="text-sm text-zinc-500">No collections loaded.</p>
         )
@@ -574,6 +562,33 @@ export function PdsBrowserApp() {
             ? formatBytes(selectedNodeBytes)
             : undefined
         }
+        headerActions={
+          <div
+            className="flex items-center gap-1"
+            aria-label="NSID navigation history"
+          >
+            <button
+              type="button"
+              aria-label="Go back"
+              title="Back"
+              disabled={navigationIndex === 0}
+              onClick={() => void handleNavigationHistory(navigationIndex - 1)}
+              className="rounded border border-[#333] px-1.5 py-0.5 text-[9px] text-zinc-400 transition hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              aria-label="Go forward"
+              title="Forward"
+              disabled={navigationIndex >= navigationPaths.length - 1}
+              onClick={() => void handleNavigationHistory(navigationIndex + 1)}
+              className="rounded border border-[#333] px-1.5 py-0.5 text-[9px] text-zinc-400 transition hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              →
+            </button>
+          </div>
+        }
       >
         {selectedNode ? (
           <>
@@ -581,7 +596,7 @@ export function PdsBrowserApp() {
               node={selectedNode}
               collectionBytes={sizeIndex.collectionBytes}
               onSelectNode={(node) => {
-                void handleSelectNode(node, true);
+                void handleSelectNode(node);
               }}
             />
             {selectedNode.collection ? (
@@ -613,7 +628,7 @@ export function PdsBrowserApp() {
           </>
         ) : (
           <p className="px-4 py-8 text-center text-sm text-zinc-500">
-            Select a namespace from the tree.
+            Select a namespace from the folder list.
           </p>
         )}
       </BrowserColumn>

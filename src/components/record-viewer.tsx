@@ -26,6 +26,58 @@ function recordFields(value: unknown): Array<[string, unknown]> {
   return [["value", value]];
 }
 
+function isStructuredValue(value: unknown): value is Record<string, unknown> | unknown[] {
+  return value !== null && typeof value === "object";
+}
+
+function FieldRows({ value }: { value: unknown }) {
+  return (
+    <dl className="divide-y divide-[#2b2b2b]">
+      {recordFields(value).map(([key, fieldValue]) => (
+        <FieldRow key={key} fieldKey={key} value={fieldValue} />
+      ))}
+    </dl>
+  );
+}
+
+function FieldRow({ fieldKey, value }: { fieldKey: string; value: unknown }) {
+  const childEntries = Array.isArray(value)
+    ? value.map((item, index) => [`[${index}]`, item] as [string, unknown])
+    : recordFields(value);
+
+  return (
+    <div className="px-4 py-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <dt className="break-all text-[11px] font-medium text-sky-300">
+          {fieldKey}
+        </dt>
+        <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] text-zinc-600">
+          {valueType(value)}
+        </span>
+      </div>
+      <dd>
+        {isStructuredValue(value) ? (
+          childEntries.length > 0 ? (
+            <dl className="overflow-hidden rounded-md border border-[#2b2b2b] bg-[#141414]/50 divide-y divide-[#2b2b2b]">
+              {childEntries.map(([key, childValue]) => (
+                <FieldRow key={key} fieldKey={key} value={childValue} />
+              ))}
+            </dl>
+          ) : (
+            <span className="font-mono text-[10px] text-zinc-600">
+              {Array.isArray(value) ? "[]" : "{}"}
+            </span>
+          )
+        ) : (
+          <pre className="w-full max-w-full overflow-x-auto whitespace-pre font-mono text-[11px] leading-5">
+            <JsonSyntax value={value} />
+          </pre>
+        )}
+      </dd>
+    </div>
+  );
+}
+
 interface RecordViewerProps {
   record: RepoRecord | null;
   sizeBytes?: number;
@@ -111,25 +163,7 @@ export function RecordViewer({
         </div>
 
         {activeTab === "fields" ? (
-          <dl className="divide-y divide-[#2b2b2b]">
-            {recordFields(record.value).map(([key, value]) => (
-              <div key={key} className="px-4 py-3">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <dt className="break-all text-xs font-medium text-sky-300">
-                    {key}
-                  </dt>
-                  <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
-                    {valueType(value)}
-                  </span>
-                </div>
-                <dd>
-                  <pre className="w-full max-w-full overflow-x-auto whitespace-pre font-mono text-xs leading-6">
-                    <JsonSyntax value={value} />
-                  </pre>
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <FieldRows value={record.value} />
         ) : (
           <pre className="w-full max-w-full overflow-x-auto whitespace-pre p-4 font-mono text-xs leading-6">
             <JsonSyntax value={record.value} />

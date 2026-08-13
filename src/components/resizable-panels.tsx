@@ -12,6 +12,7 @@ interface BrowserColumnProps {
   title: string;
   subtitle?: string;
   badge?: string | number;
+  headerActions?: ReactNode;
   children: ReactNode;
 }
 
@@ -19,6 +20,7 @@ export function BrowserColumn({
   title,
   subtitle,
   badge,
+  headerActions,
   children,
 }: BrowserColumnProps) {
   return (
@@ -26,9 +28,12 @@ export function BrowserColumn({
       <div className="shrink-0 border-b border-[#2b2b2b] bg-[#141414] px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-xs font-semibold text-zinc-300">{title}</h2>
-          {badge !== undefined ? (
-            <span className="text-xs text-zinc-500">{badge}</span>
-          ) : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {headerActions}
+            {badge !== undefined ? (
+              <span className="text-xs text-zinc-500">{badge}</span>
+            ) : null}
+          </div>
         </div>
         {subtitle ? (
           <p className="mt-1 truncate font-mono text-xs text-zinc-500">

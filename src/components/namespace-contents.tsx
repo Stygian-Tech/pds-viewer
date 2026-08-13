@@ -36,14 +36,14 @@ export function NamespaceContents({
             key={child.path}
             type="button"
             onClick={() => onSelectNode(child)}
-            className="grid w-full grid-cols-[minmax(180px,1fr)_100px_80px] items-center gap-3 border-b border-zinc-800/80 px-3 py-2 text-left text-xs text-zinc-300 transition last:border-b-0 hover:bg-zinc-900/80"
+            className="grid w-full grid-cols-[minmax(180px,1fr)_100px_80px] items-center gap-3 border-b border-zinc-800/80 px-3 py-1.5 text-left text-[10px] text-zinc-300 transition last:border-b-0 hover:bg-zinc-900/80"
           >
             <span className="flex min-w-0 items-center gap-2">
-              <FolderIcon className="size-4 shrink-0 text-emerald-400/80" />
+              <FolderIcon className="size-3.5 shrink-0 text-emerald-400/80" />
               <span className="truncate">{child.name}</span>
             </span>
-            <span className="text-[11px] text-zinc-500">{kind}</span>
-            <span className="text-right text-[11px] text-zinc-500">
+            <span className="text-[9px] text-zinc-500">{kind}</span>
+            <span className="text-right text-[9px] text-zinc-500">
               {sizeBytes > 0 || child.collection
                 ? formatBytes(sizeBytes)
                 : "—"}

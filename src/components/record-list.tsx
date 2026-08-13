@@ -73,22 +73,22 @@ export function RecordList({
               key={record.uri}
               type="button"
               onClick={() => onSelect(record)}
-              className={`grid w-full grid-cols-[minmax(190px,1fr)_minmax(140px,.8fr)_80px] items-center gap-3 border-b border-zinc-800/80 px-3 py-2 text-left text-xs transition ${
+              className={`grid w-full grid-cols-[minmax(190px,1fr)_minmax(140px,.8fr)_80px] items-center gap-3 border-b border-zinc-800/80 px-3 py-1.5 text-left text-[10px] transition ${
                 selected
                   ? "bg-emerald-500/14 text-emerald-50"
                   : "text-zinc-300 hover:bg-zinc-900/80"
               }`}
             >
               <span className="flex min-w-0 items-center gap-2">
-                <RecordIcon className={`size-4 shrink-0 ${selected ? "text-emerald-400" : "text-zinc-500"}`} />
+                <RecordIcon className={`size-3.5 shrink-0 ${selected ? "text-emerald-400" : "text-zinc-500"}`} />
                 <span className="truncate">
                   {recordLabel(record.value, record.uri)}
                 </span>
               </span>
-              <span className="truncate text-[11px] text-zinc-500">
+              <span className="truncate text-[9px] text-zinc-500">
                 {rkey}
               </span>
-              <span className="text-right text-[11px] text-zinc-500">
+              <span className="text-right text-[9px] text-zinc-500">
                 {recordBytesByUri[record.uri] !== undefined
                   ? formatBytes(recordBytesByUri[record.uri])
                   : "—"}
@@ -104,7 +104,7 @@ export function RecordList({
             type="button"
             onClick={onLoadMore}
             disabled={loadingMore}
-            className="w-full rounded-lg border border-zinc-700 px-2 py-2 text-xs text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+            className="w-full rounded-lg border border-zinc-700 px-2 py-1.5 text-[10px] text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
           >
             {loadingMore ? "Loading more…" : "Load more records"}
           </button>
