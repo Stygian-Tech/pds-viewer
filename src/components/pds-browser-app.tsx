@@ -596,7 +596,7 @@ export function PdsBrowserApp() {
           </div>
         }
       >
-        {selectedNode ? (
+        {selectedPath && selectedNode ? (
           <>
             <NamespaceContents
               node={selectedNode}
@@ -632,11 +632,7 @@ export function PdsBrowserApp() {
               </p>
             ) : null}
           </>
-        ) : (
-          <p className="px-4 py-8 text-center text-sm text-zinc-500">
-            Select a namespace from the folder list.
-          </p>
-        )}
+        ) : null}
       </BrowserColumn>
     ) : (
       <BrowserColumn
